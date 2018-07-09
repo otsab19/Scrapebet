@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import os
+import re
 import sys
 parent_dir = os.path.abspath(os.path.dirname('clubelo.py'))
 vendor_dir = os.path.join(parent_dir, 'vendor')
@@ -130,7 +131,8 @@ class FootballRatings():
                             t = xx.index('/')
                             xx = xx[t+1:]
                         except:
-                            pass    
+                            pass   
+                        xx = re.sub('(?!^)([A-Z][a-z]+)', r' \1', xx)   
                 elif i == '615':
                     xx = ''
                     for index in ['615','620','625']:
