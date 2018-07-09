@@ -1,34 +1,22 @@
-#!/usr/bin/python  
-from lxml import html
+#!/usr/bin/python
+import os
 import sys
+parent_dir = os.path.abspath(os.path.dirname('clubelo.py'))
+vendor_dir = os.path.join(parent_dir, 'vendor')
+sys.path.append(vendor_dir)  
+from xml.etree.ElementTree import Element, SubElement, Comment, tostring
+from lxml import html
 import multiprocessing
 import json
 import csv
 import xml
-from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 import datetime
 import requests
 from bs4 import BeautifulSoup
 from dateutil.rrule import rrule, DAILY
-import os
 import errno
 PATH = ''
-# <Source> Clubelo</Source>
-# <Sport> Soccer </Sport>
-# <Date> 2018-06-29 </Date>
-# <Time> 18:45 </Time>
-# <HomeTeam> Cefn Druids </HomeTeam>
-# <AwayTeam> Trakai </AwayTeam>
-# HomeTeamELOpoints
-# AwayTeamELOpoints
-# ELOdiff
-# ELOpointsforgame
-# <Pred1> 59% </Pred1>
-# <PredX> 24% </PredX>
-# <Pred2> 18% </Pred2>
-# <PredAH0Home>51</PredAH0Home>
-# <PredAH0Away>49</PredAH0Away>
-# <MatchScore> 1:0 </MatchScore>
+
 mapp={  'Time':625,
         'HomeTeam':20,
         'AwayTeam':235,
@@ -42,7 +30,7 @@ mapp={  'Time':625,
         'PredAH0Home':[520,534],
         'PredAH0Draw':550,
         'PredAH0Away':[580,578],
-        'Result':615,
+        'MatchScore':615,
         'country_image_home':0,
         'country_image_away':215
         }
@@ -121,7 +109,6 @@ class FootballRatings():
         y = html_sel.xpath('//*[@class="blatt"]/svg//text//@y[not(ancestor::g)]')
         country_image_home = html_sel.xpath('//*[@class="blatt"]/svg/image/@x')
         country_image_away = html_sel.xpath('//*[@class="blatt"]/svg/image/@y')
-
         x=x+country_image_home
         y=y+country_image_away
         for i,j in zip(x,y):
@@ -129,12 +116,28 @@ class FootballRatings():
             try:
                 list_item = [item for item in mapp if (mapp[item].__class__==list and (mapp[item][0]==int(i) or mapp[item][1]==int(i))) or mapp[item]==int(i)]
                 xpath = '//*[@class="blatt"]/svg//text[@x='+i+'and @y='+j+']/text()'
-                if i == '615':
+                if i=='20' or i=='235':
+                    #test for latin words
+                    test_latin = html_sel.xpath(xpath)[0]
+                    try:
+                        test_latin.encode('latin1')
+                        xx=test_latin
+                    except:
+                        xpath = '//*[@class="blatt"]/svg//text[@x='+i+'and @y='+j+']/parent::a/@*'
+                        xx = html_sel.xpath(xpath)[0]
+                        xx=xx.strip('/')
+                        try:
+                            t = xx.index('/')
+                            xx = xx[t+1:]
+                        except:
+                            pass    
+                elif i == '615':
                     xx = ''
                     for index in ['615','620','625']:
                         xpath = '//*[@class="blatt"]/svg//text[@x='+index+'and @y='+j+']/text()'
                         temp=html_sel.xpath(xpath)[0]
                         xx = xx+temp
+                    xx = xx.replace('-', ':')    
 
                 elif i == '625':
                     xpath = '//*[@class="blatt"]/svg//text[@x='+i+'and @y='+j+']/text()'
@@ -172,10 +175,14 @@ class FootballRatings():
                     res[str(j)]= [{list_item[0]:xx}]
             except:
                 pass
+
+        # set date for folder
+        if date==None:
+            date = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d') 
+        else:
+            date = (datetime.datetime.strptime(date, "%Y-%m-%d").date() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")        
         for result in res:
-            try:
-                if date==None:
-                    date = datetime.datetime.now().strftime('%Y-%m-%d')
+            try:      
                 PATH = os.path.join(os.getcwd(),scrape_type,date)
                 os.makedirs(PATH)
             except OSError as exc: 
@@ -189,16 +196,16 @@ class FootballRatings():
             away_club = list(filter(lambda x:(x.get('AwayTeam')),res[result])) 
             filename = home_club[0]['HomeTeam'] + ' '+'vs'+' ' + away_club[0]['AwayTeam']+'.xml'
             filename = filename.replace('/',':')
-            with open(os.path.join(PATH,filename), 'w') as fl:
+            with open(os.path.join(PATH,filename), 'w', encoding='utf-8') as fl:
                 try: 
                     print(filename+'\n')
-                    fl.write(xml.decode('utf-8'))
+                    fl.write(xml.decode('utf-16le'))
 
                 except:
                     pass
             fl.close()
 
-    def start_requests(self):
+    def start_requests(self):  
         if self.date!=None:
             if self.end_date!=None:
                 for dt in rrule(DAILY, dtstart=datetime.datetime.strptime(self.date, "%Y-%m-%d").date(), until=datetime.datetime.strptime(self.end_date, "%Y-%m-%d").date()):
