@@ -198,7 +198,7 @@ class FootballRatings():
             home_club = list(filter(lambda x:(x.get('HomeTeam')),res[result]))
             away_club = list(filter(lambda x:(x.get('AwayTeam')),res[result])) 
             filename = home_club[0]['HomeTeam'] + ' '+'-'+' ' + away_club[0]['AwayTeam']+'.xml'
-            filename = filename.replace('/',':')
+            filename = filename.replace('/',' ')
             with open(os.path.join(PATH,filename), 'w', encoding='utf-8') as fl:
                 try: 
                     print(filename+'\n')
