@@ -145,7 +145,7 @@ class FootballRatings():
                     xpath = '//*[@class="blatt"]/svg//text[@x='+i+'and @y='+j+']/text()'
                     temp=html_sel.xpath(xpath)[0]
                     xx = temp.replace('h', ':')
-                    xx = datetime.datetime.strptime(xx,'%H:%M').strftime('%I:%M %p')  
+                    xx = datetime.datetime.strptime(xx,'%H:%M').strftime('%H:%M')  
 
                 elif i == '472':
                     xx=''
@@ -179,10 +179,11 @@ class FootballRatings():
                 pass
 
         # set date for folder
-        if date==None:
-            date = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d') 
-        else:
-            date = (datetime.datetime.strptime(date, "%Y-%m-%d").date() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")        
+        if self.scrape_type == "Results":
+            if date==None:
+                date = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d') 
+            else:
+                date = (datetime.datetime.strptime(date, "%Y-%m-%d").date() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")        
         for result in res:
             try:      
                 PATH = os.path.join(os.getcwd(),scrape_type,date)
