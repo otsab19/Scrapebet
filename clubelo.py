@@ -184,6 +184,8 @@ class FootballRatings():
                 date = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d') 
             else:
                 date = (datetime.datetime.strptime(date, "%Y-%m-%d").date() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")        
+        else:
+            date = datetime.datetime.now().strftime('%Y-%m-%d')
         for result in res:
             try:      
                 PATH = os.path.join(os.getcwd(),scrape_type,date)
