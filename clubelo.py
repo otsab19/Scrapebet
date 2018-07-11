@@ -17,7 +17,15 @@ from bs4 import BeautifulSoup
 from dateutil.rrule import rrule, DAILY
 import errno
 PATH = ''
+# Rank
+# Teamname
+# Country
+# ELOpoints
 
+# The output file should be named:
+# YYYY-MM-DD Clubelo ranking list
+
+# YYYY-MM-DD=(date of scraping)
 mapp={  'Time':625,
         'HomeTeam':20,
         'AwayTeam':235,
@@ -100,6 +108,46 @@ class FootballRatings():
                     pass    
         soup = BeautifulSoup(tostring(root), 'xml')    
         return soup    
+
+    def parse_rank(self, response, date):
+        import pudb
+        pudb.set_trace()
+        try:      
+            PATH = os.path.join(os.getcwd(),self.scrape_type,date)
+            os.makedirs(PATH)
+        except OSError as exc: 
+            if exc.errno == errno.EEXIST and os.path.isdir(PATH):
+                pass
+            else:
+                raise  
+        res = response.content.decode('utf-8') 
+        cr = csv.reader(res.splitlines(), delimiter=',')
+        result_list = list(cr)
+        filename = date+ ' Clubelo ranking list'+'.xml'
+        root = Element('xml')
+        root.set('version', '1.0')
+        Source = SubElement(root, 'Source')
+        Source.text = 'Clubelo'
+        Sport = SubElement(root, 'Sport')
+        Sport.text = 'Soccer'
+
+        for i,result in enumerate(result_list[1:]): 
+            if result !=[]:
+                Team = SubElement(root, 'Team')
+                Rank = SubElement(Team, 'Rank')
+                Rank.text = str(int(i+1))
+                Teamname = SubElement(Team, 'Teamname')
+                Teamname.text = result[1]
+                Country = SubElement(Team, 'Country')
+                Country.text = self.country_list[result[2]]
+                ELOpoints = SubElement(Team, 'ELOpoints')
+                ELOpoints.text = result[4]
+        soup = BeautifulSoup(tostring(root), 'xml')      
+        with open(os.path.join(PATH,filename), 'w', encoding="utf-8") as fl:
+            print(filename)
+            fl.write(soup.decode('utf-8'))
+
+
 
     def parse(self, response, date=None):
        
@@ -190,6 +238,8 @@ class FootballRatings():
             else:
                 pass  
         for result in res:
+            import pudb
+            pudb.set_trace()
             try:      
                 PATH = os.path.join(os.getcwd(),scrape_type,date)
                 os.makedirs(PATH)
@@ -214,38 +264,60 @@ class FootballRatings():
             fl.close()
 
     def start_requests(self):  
-        if self.date!=None:
-            if self.end_date!=None:
-                for dt in rrule(DAILY, dtstart=datetime.datetime.strptime(self.date, "%Y-%m-%d").date(), until=datetime.datetime.strptime(self.end_date, "%Y-%m-%d").date()):
-                    response = requests.get('http://clubelo.com/'+dt.strftime("%Y-%m-%d")+'/'+self.scrape_type)
-                    self.parse(response,dt.strftime("%Y-%m-%d"))
-            else:
-                response = requests.get('http://clubelo.com/'+self.date+'/'+self.scrape_type)
-                self.parse(response,self.date)
-                    
-        else:    
-            urls = [
-                'http://clubelo.com/'+self.scrape_type
-            ]
+        if self.scrape_type == 'Results' or self.scrape_type == 'Fixtures':
+            if self.date!=None:
+                if self.end_date!=None:
+                    for dt in rrule(DAILY, dtstart=datetime.datetime.strptime(self.date, "%Y-%m-%d").date(), until=datetime.datetime.strptime(self.end_date, "%Y-%m-%d").date()):
+                        response = requests.get('http://clubelo.com/'+dt.strftime("%Y-%m-%d")+'/'+self.scrape_type)
+                        self.parse(response,dt.strftime("%Y-%m-%d"))
+                else:
+                    response = requests.get('http://clubelo.com/'+self.date+'/'+self.scrape_type)
+                    self.parse(response,self.date)
+                        
+            else:    
+                urls = [
+                    'http://clubelo.com/'+self.scrape_type
+                ]
 
-            for url in urls:
-                response = requests.get(url)
-                self.parse(response,None)
+                for url in urls:
+                    response = requests.get(url)
+                    self.parse(response,None)
 
-    
+        else:
+            if self.date!=None:
+                if self.end_date!=None:
+                    for dt in rrule(DAILY, dtstart=datetime.datetime.strptime(self.date, "%Y-%m-%d").date(), until=datetime.datetime.strptime(self.end_date, "%Y-%m-%d").date()):
+                        response = requests.get('http://api.clubelo.com/'+dt.strftime("%Y-%m-%d"))
+                        self.parse_rank(response,dt.strftime("%Y-%m-%d"))
+                else:
+                    response = requests.get('http://api.clubelo.com/'+self.date)
+                    self.parse_rank(response,self.date)
+                        
+            else:    
+                urls = [
+                    'http://api.clubelo.com/'+datetime.datetime.now().strftime('%Y-%m-%d')
+                ]
+
+                for url in urls:
+                    response = requests.get(url)
+                    self.parse_rank(response,datetime.datetime.now().strftime('%Y-%m-%d'))
+
 
 
 if __name__ == "__main__":
-    
+    scraping_type=['Results','Fixtures','Rank']
     scrape_type = input("Enter scrape type: ")
     date = input("Enter start date: ")
     end_date = input("Enter end date: ")
+
     if scrape_type == '':
         scrape_type = 'Results'
-    scrape_type = scrape_type.capitalize()    
+    scrape_type = scrape_type.capitalize()   
+    if scrape_type not in scraping_type:
+        print("Type Results or Fixtures or Rank")
+        sys.exit(0) 
     if date=='':
         date = None
-
     if end_date=='': 
         end_date = None    
     try:
