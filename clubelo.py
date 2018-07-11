@@ -110,8 +110,6 @@ class FootballRatings():
         return soup    
 
     def parse_rank(self, response, date):
-        import pudb
-        pudb.set_trace()
         try:      
             PATH = os.path.join(os.getcwd(),self.scrape_type,date)
             os.makedirs(PATH)
@@ -127,7 +125,7 @@ class FootballRatings():
         root = Element('xml')
         root.set('version', '1.0')
         Source = SubElement(root, 'Source')
-        Source.text = 'Clubelo'
+        Source.text = 'Clubelo ELO ranking'
         Sport = SubElement(root, 'Sport')
         Sport.text = 'Soccer'
 
@@ -238,8 +236,6 @@ class FootballRatings():
             else:
                 pass  
         for result in res:
-            import pudb
-            pudb.set_trace()
             try:      
                 PATH = os.path.join(os.getcwd(),scrape_type,date)
                 os.makedirs(PATH)
