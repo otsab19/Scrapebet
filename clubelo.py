@@ -41,7 +41,8 @@ mapp={  'Time':625,
         'PredAH0Away':[580,578],
         'MatchScore':615,
         'country_image_home':0,
-        'country_image_away':215
+        'country_image_away':215,
+        'vs':200,
         }
 mapp_pred = {
             'Pred1':'PredAH0Home',
@@ -57,9 +58,108 @@ class FootballRatings():
         self.date = date
         self.end_date = end_date 
         self.country_list = json.load(open('country_list.config'))
+        self.sel = None
 
-    def jsontoxml(self, obj, date=None):
+    def extract_vs(self, value_y, root):
+        import pudb
+        pudb.set_trace()
+        xpath = '//*[@class="blatt"]/svg//text[@x=200 and @y='+str(value_y)+']/parent::a/@*'
+        url = self.sel.xpath(xpath)[0]
+        url = 'http://clubelo.com'+url
+        res = requests.get(url)
+        if res.status_code!=200:
+            return root
+
+        html_sel = html.fromstring(res.content)
+        gd = html_sel.xpath('//svg[@height=34]/text/text()')
+        exact_score = html_sel.xpath('//svg[@height=180]/text/text()')
+        extra = html_sel.xpath('//svg[@height=240 and @width=540]/g/text/text()')[:9]
+        
+        # goal difference
+        g_d = SubElement(root, 'GoalDifference')
+        gd_key = gd[0::2]
+        gd_values = gd[1::2]
+        for i in range(len(gd_key)):
+            temp = 'Data_'+gd_key[i]
+            temp = temp.replace('<','Lessthan ')
+            temp = temp.replace('>','Morethan ')
+            # temp = temp.replace('-','Minus ')
+            # temp = temp.replace('+','Plus ')
+            # temp = temp.replace('0','zero ')
+            val = SubElement(g_d, temp)
+            val.text = gd_values[i]
+
+        # exact scores
+        e_s = SubElement(root, 'ExactScore')
+        es_key = gd[0::2]
+        es_values = gd[1::2]
+        for i in range(len(es_key)):
+            temp = 'Data _'+es_key[i]
+            
+            temp = temp.replace('<','Lessthan ')
+            temp = temp.replace('>','Morethan ')
+            # temp = temp.replace('-','Minus ')
+            # temp = temp.replace('+','Plus ')
+            # temp = temp.replace('0','zero ')
+
+            val = SubElement(e_s, temp)
+            val.text = es_values[i]
+
+        # extras tilt,elo percentage, HFA, excepted goals
+        hfa = SubElement(root, 'HFA')
+        hfa.text = re.search(r'[\d]+',extra[0]).group()
+
+        elo_per_home = SubElement(root, "EloPercentageHomeTeam")
+        elo_per_home.text = extra[1]
+
+        elo_per_away = SubElement(root, "EloPercentageAwayTeam")
+        elo_per_away = extra[2]
+
+        tilt_home = SubElement(root,"TitlHome")
+        tilt_home.text = extra[3]
+
+        tilt_away = SubElement(root, 'TiltAway')
+        tilt_away.text = extra[4]
+
+        expected_goals_home = SubElement(root, 'ExpectedGoalsHome')
+        expected_goals_home.text = extra[6]
+
+        expected_goals_away = SubElement(root, 'ExpectedGoalsAway')
+        expected_goals_away.text = extra[7]
+        return root
+
+    def extract_add(self,value_y,root):
+
+        keys_col=['Played','Won','Drawn','Lost','Goals']
+        keys_rows =['Total','Home','Away','Neutral','International','Domestic']
+        for x in 20,235:
+            xpath = '//*[@class="blatt"]/svg//text[@x='+str(x)+' and @y='+str(value_y)+']/parent::a/@*'
+            url = self.sel.xpath(xpath)[0]
+            url = 'http://clubelo.com'+url
+            res = requests.get(url)
+            html_sel = html.fromstring(res.content)
+
+            
+            data = [i for i in html_sel.xpath('/html/body/div/div[9]/table/td/text()')]
+            le = int(len(data)/10)
+            if x==20:
+                    val = SubElement(root, 'HomeTeamStats') 
+            else:
+                val = SubElement(root, 'AwayTeamStats')
+            for i in range(0,le,1):    
+                  
+                row = SubElement(val, keys_rows[i])                             
+                for j in range(i*10,(i*10+5),1):
+                         
+                                               
+                    el = SubElement(row, keys_col[j-10*i])
+                    el.text = data[j]
+        return root
+        
+    def jsontoxml(self, obj,value_y, date=None):
     # create root of xml
+
+          
         root = Element('xml')
 
 
@@ -67,6 +167,7 @@ class FootballRatings():
         mapp_dict=mapp.copy()
         del mapp_dict['country_image_away']
         del mapp_dict['country_image_home']
+        del mapp_dict['vs']
         root.set('version', '1.0')
         Matches = SubElement(root, 'Matches')
         Match = SubElement(Matches, 'Match')
@@ -96,6 +197,13 @@ class FootballRatings():
             Country = SubElement(Match, 'Country')
             country_full = self.country_list[country_home]
             Country.text = country_full    
+
+        ground = [ob[i] for ob in obj for i in ob.keys() if i=='vs'][0]   
+        NeutralGround = SubElement(Match, 'NeutralGround') 
+        if ground=='N':
+            NeutralGround.text='Yes'
+        else:
+            NeutralGround.text  = 'No'    
         keys = [list(obj.keys()) for obj in obj]
         keys = [k[0] for k in keys]
         for outline in list(mapp_dict.keys()):
@@ -105,7 +213,10 @@ class FootballRatings():
                 try:
                     current_group.text = element[outline]
                 except:
-                    pass    
+                    pass
+                       
+        root = self.extract_add(value_y,root)           
+        root = self.extract_vs(value_y,root) 
         soup = BeautifulSoup(tostring(root), 'xml')    
         return soup    
 
@@ -152,6 +263,7 @@ class FootballRatings():
         result = []
         res = {}
         html_sel = html.fromstring(response.content)
+        self.sel = html_sel
         x = html_sel.xpath('//*[@class="blatt"]/svg//text//@x[not(ancestor::g)]')
         y = html_sel.xpath('//*[@class="blatt"]/svg//text//@y[not(ancestor::g)]')
         country_image_home = html_sel.xpath('//*[@class="blatt"]/svg/image/@x')
@@ -209,7 +321,6 @@ class FootballRatings():
                         xx=country
                     else:    
                         country=xx
-
                 else:
                     xx = html_sel.xpath(xpath)[0]
 
@@ -243,8 +354,9 @@ class FootballRatings():
                 if exc.errno == errno.EEXIST and os.path.isdir(PATH):
                     pass
                 else:
-                    raise    
-            xml = self.jsontoxml(res[result],date)
+                    raise   
+                     
+            xml = self.jsontoxml(res[result],result,date)
             # xml_str = json2xml(res[result])
             home_club = list(filter(lambda x:(x.get('HomeTeam')),res[result]))
             away_club = list(filter(lambda x:(x.get('AwayTeam')),res[result])) 
