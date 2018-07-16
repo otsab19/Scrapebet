@@ -61,8 +61,7 @@ class FootballRatings():
         self.sel = None
 
     def extract_vs(self, value_y, root):
-        import pudb
-        pudb.set_trace()
+        
         xpath = '//*[@class="blatt"]/svg//text[@x=200 and @y='+str(value_y)+']/parent::a/@*'
         url = self.sel.xpath(xpath)[0]
         url = 'http://clubelo.com'+url
@@ -74,57 +73,70 @@ class FootballRatings():
         gd = html_sel.xpath('//svg[@height=34]/text/text()')
         exact_score = html_sel.xpath('//svg[@height=180]/text/text()')
         extra = html_sel.xpath('//svg[@height=240 and @width=540]/g/text/text()')[:9]
-        
+        odds_drift = html_sel.xpath('//svg[@height=240 and @width=540]//text[@fill="#72BBEF"]/text()')
+        prob = html_sel.xpath('//svg[@height=22 and @width=640]//text/text()')
+        season = html_sel.xpath('//*[@class="astblatt"]/div/p/text()')
+
+        #season
+        league = SubElement(root,'League')
+        league.text = season[1]
+        seas = SubElement(root,'Season')
+        seas.text = season[0]
+
+        #pred
+        Pred1 = SubElement(root,'Pred1')
+        Pred1.text = prob[2]
+        PredX = SubElement(root,'PredX')
+        PredX.text = prob[1]
+        Pred2 = SubElement(root,'Pred2')
+        Pred2.text = prob[0]
+
         # goal difference
         g_d = SubElement(root, 'GoalDifference')
         gd_key = gd[0::2]
         gd_values = gd[1::2]
         for i in range(len(gd_key)):
-            temp = 'Data_'+gd_key[i]
-            temp = temp.replace('<','Lessthan ')
-            temp = temp.replace('>','Morethan ')
-            # temp = temp.replace('-','Minus ')
-            # temp = temp.replace('+','Plus ')
-            # temp = temp.replace('0','zero ')
+            temp = gd_key[i].replace('>+5','6')
+            temp = gd_key[i].replace('<-5','6')
+            temp = 'PredGA'+temp
             val = SubElement(g_d, temp)
             val.text = gd_values[i]
 
         # exact scores
         e_s = SubElement(root, 'ExactScore')
-        es_key = gd[0::2]
-        es_values = gd[1::2]
+        es_key = exact_score[0::2]
+        es_values = exact_score[1::2]
         for i in range(len(es_key)):
-            temp = 'Data _'+es_key[i]
-            
-            temp = temp.replace('<','Lessthan ')
-            temp = temp.replace('>','Morethan ')
-            # temp = temp.replace('-','Minus ')
-            # temp = temp.replace('+','Plus ')
-            # temp = temp.replace('0','zero ')
-
+            temp = 'PredCSFT'+es_key[i]
             val = SubElement(e_s, temp)
             val.text = es_values[i]
-
+        # odds drift
+        Odds1 = SubElement(root,'Odds1')
+        Odds1.text = odds_drift[0]
+        OddsX = SubElement(root,'OddsX')
+        OddsX.text = odds_drift[1]
+        Odds2 = SubElement(root,'Odds2')
+        Odds2.text = odds_drift[2]
         # extras tilt,elo percentage, HFA, excepted goals
-        hfa = SubElement(root, 'HFA')
+        hfa = SubElement(root, 'HomefieldleagueadvELO')
         hfa.text = re.search(r'[\d]+',extra[0]).group()
 
-        elo_per_home = SubElement(root, "EloPercentageHomeTeam")
+        elo_per_home = SubElement(root, "PredAH0Home")
         elo_per_home.text = extra[1]
 
-        elo_per_away = SubElement(root, "EloPercentageAwayTeam")
+        elo_per_away = SubElement(root, "PredAH0Away")
         elo_per_away = extra[2]
 
-        tilt_home = SubElement(root,"TitlHome")
+        tilt_home = SubElement(root,"HometeamTilt")
         tilt_home.text = extra[3]
 
-        tilt_away = SubElement(root, 'TiltAway')
+        tilt_away = SubElement(root, 'AwayteamTilt')
         tilt_away.text = extra[4]
 
-        expected_goals_home = SubElement(root, 'ExpectedGoalsHome')
+        expected_goals_home = SubElement(root, 'Hometeamexpgoals')
         expected_goals_home.text = extra[6]
 
-        expected_goals_away = SubElement(root, 'ExpectedGoalsAway')
+        expected_goals_away = SubElement(root, 'Awayteamexpgoals')
         expected_goals_away.text = extra[7]
         return root
 
@@ -215,8 +227,8 @@ class FootballRatings():
                 except:
                     pass
                        
-        root = self.extract_add(value_y,root)           
-        root = self.extract_vs(value_y,root) 
+        root = self.extract_add(value_y,Match)           
+        root = self.extract_vs(value_y,Match) 
         soup = BeautifulSoup(tostring(root), 'xml')    
         return soup    
 
