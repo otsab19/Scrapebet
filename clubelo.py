@@ -79,8 +79,8 @@ class FootballRatings():
 
         #season
         league = SubElement(root,'League')
-        league = league.split(',')[0]
-        league.text = season[1]
+        t = season[1].split(',')[0]
+        league.text = t
         # seas = SubElement(root,'Season')
         # seas.text = season[0]
 
