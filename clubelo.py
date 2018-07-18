@@ -79,28 +79,40 @@ class FootballRatings():
 
         #season
         league = SubElement(root,'League')
+        league = league.split(',')[0]
         league.text = season[1]
-        seas = SubElement(root,'Season')
-        seas.text = season[0]
+        # seas = SubElement(root,'Season')
+        # seas.text = season[0]
 
         #pred
-        Pred1 = SubElement(root,'Pred1')
-        Pred1.text = prob[2]
-        PredX = SubElement(root,'PredX')
-        PredX.text = prob[1]
-        Pred2 = SubElement(root,'Pred2')
-        Pred2.text = prob[0]
-
+        Pred1 = root.find('Pred1')
+        if Pred1 !=None:
+            Pred1.text = prob[2]
+            PredX = root.find('PredX')
+            PredX.text = prob[1]
+            Pred2 = root.find('Pred2')
+            Pred2.text = prob[0]
+        else:
+            Pred1 = SubElement(root, 'Pred1')
+            Pred1.text = prob[2]
+            PredX = SubElement(root, 'PredX')
+            PredX.text = prob[1]
+            Pred2 = SubElement(root, 'Pred2')
+            Pred2.text = prob[0]
         # goal difference
         g_d = SubElement(root, 'GoalDifference')
         gd_key = gd[0::2]
         gd_values = gd[1::2]
+
         for i in range(len(gd_key)):
             temp = gd_key[i].replace('>+5','6')
-            temp = gd_key[i].replace('<-5','6')
+            temp = temp.replace('<-5','-6')
+            temp = temp.replace('+','')
             temp = 'PredGA'+temp
             val = SubElement(g_d, temp)
-            val.text = gd_values[i]
+            t = gd_values[i].replace('>','')
+            t = t.replace('<','')
+            val.text = t
 
         # exact scores
         e_s = SubElement(root, 'ExactScore')
@@ -109,7 +121,9 @@ class FootballRatings():
         for i in range(len(es_key)):
             temp = 'PredCSFT'+es_key[i]
             val = SubElement(e_s, temp)
-            val.text = es_values[i]
+            t = es_values[i].replace('>','')
+            t = t.replace('<','')
+            val.text = t
         # odds drift
         Odds1 = SubElement(root,'Odds1')
         Odds1.text = odds_drift[0]
@@ -121,10 +135,10 @@ class FootballRatings():
         hfa = SubElement(root, 'HomefieldleagueadvELO')
         hfa.text = re.search(r'[\d]+',extra[0]).group()
 
-        elo_per_home = SubElement(root, "PredAH0Home")
+        elo_per_home = SubElement(root, "PredAHOhome-Homefieldadv")
         elo_per_home.text = extra[1]
 
-        elo_per_away = SubElement(root, "PredAH0Away")
+        elo_per_away = SubElement(root, "PredAHOaway-Homefieldadv")
         elo_per_away = extra[2]
 
         tilt_home = SubElement(root,"HometeamTilt")
@@ -226,9 +240,10 @@ class FootballRatings():
                     current_group.text = element[outline]
                 except:
                     pass
-                       
-        root = self.extract_add(value_y,Match)           
-        root = self.extract_vs(value_y,Match) 
+                 
+        # Matches = self.extract_add(value_y,Match)           
+        Matches = self.extract_vs(value_y,Match) 
+
         soup = BeautifulSoup(tostring(root), 'xml')    
         return soup    
 
