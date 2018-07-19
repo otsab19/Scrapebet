@@ -142,9 +142,11 @@ class FootballRatings():
         # extras tilt,elo percentage, HFA, excepted goals
         if extra!=[]:
 
-            hfa = SubElement(root, 'HomefieldleagueadvELO')
+            
             try:
-                hfa.text = re.search(r'[\d]+',extra[0]).group()
+                if re.search(r'[\d]+',extra[0]).group() != None:
+                    hfa = SubElement(root, 'HomefieldleagueadvELO')
+                    hfa.text = re.search(r'[\d]+',extra[0]).group()
             except:
                 pass
             elo_per_home = SubElement(root, "PredAHOhome-Homefieldadv")
