@@ -141,9 +141,12 @@ class FootballRatings():
             Odds2.text = odds_drift[2]
         # extras tilt,elo percentage, HFA, excepted goals
         if extra!=[]:
-            hfa = SubElement(root, 'HomefieldleagueadvELO')
-            hfa.text = re.search(r'[\d]+',extra[0]).group()
 
+            hfa = SubElement(root, 'HomefieldleagueadvELO')
+            try:
+                hfa.text = re.search(r'[\d]+',extra[0]).group()
+            except:
+                pass
             elo_per_home = SubElement(root, "PredAHOhome-Homefieldadv")
             elo_per_home.text = extra[1]
 
@@ -249,7 +252,7 @@ class FootballRatings():
                     current_group.text = element[outline]
                 except:
                     pass
-                 
+        # for stats of team         
         # Matches = self.extract_add(value_y,Match)           
         Matches = self.extract_vs(value_y,Match) 
 
