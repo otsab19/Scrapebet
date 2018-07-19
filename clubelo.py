@@ -100,7 +100,7 @@ class FootballRatings():
             Pred2 = SubElement(root, 'Pred2')
             Pred2.text = prob[0]
         # goal difference
-        g_d = SubElement(root, 'GoalDifference')
+        # g_d = SubElement(root, 'GoalDifference')
         gd_key = gd[0::2]
         gd_values = gd[1::2]
 
@@ -109,18 +109,18 @@ class FootballRatings():
             temp = temp.replace('<-5','-6')
             temp = temp.replace('+','')
             temp = 'PredGA'+temp
-            val = SubElement(g_d, temp)
+            val = SubElement(root, temp)
             t = gd_values[i].replace('>','')
             t = t.replace('<','')
             val.text = t
 
         # exact scores
-        e_s = SubElement(root, 'ExactScore')
+        # e_s = SubElement(root, 'ExactScore')
         es_key = exact_score[0::2]
         es_values = exact_score[1::2]
         for i in range(len(es_key)):
             temp = 'PredCSFT'+es_key[i]
-            val = SubElement(e_s, temp)
+            val = SubElement(root, temp)
             t = es_values[i].replace('>','')
             t = t.replace('<','')
             val.text = t
@@ -139,7 +139,7 @@ class FootballRatings():
         elo_per_home.text = extra[1]
 
         elo_per_away = SubElement(root, "PredAHOaway-Homefieldadv")
-        elo_per_away = extra[2]
+        elo_per_away.text = extra[2]
 
         tilt_home = SubElement(root,"HometeamTilt")
         tilt_home.text = extra[3]
@@ -186,7 +186,7 @@ class FootballRatings():
     # create root of xml
 
           
-        root = Element('xml')
+        root = Element('Matches')
 
 
         # copy of mapp remove country mappings
@@ -194,9 +194,9 @@ class FootballRatings():
         del mapp_dict['country_image_away']
         del mapp_dict['country_image_home']
         del mapp_dict['vs']
-        root.set('version', '1.0')
-        Matches = SubElement(root, 'Matches')
-        Match = SubElement(Matches, 'Match')
+        # root.set('version', '1.0')
+        # Matches = SubElement(root, 'Matches')
+        Match = SubElement(root, 'Match')
         Source = SubElement(Match, 'Source')
         Source.text = 'Clubelo'
         Sport = SubElement(Match, 'Sport')
