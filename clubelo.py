@@ -78,12 +78,14 @@ class FootballRatings():
         season = html_sel.xpath('//*[@class="astblatt"]/div/p/text()')
 
         #season
-        league = SubElement(root,'League')
-        t = season[1].split(',')[0]
-        league.text = t
-        # seas = SubElement(root,'Season')
-        # seas.text = season[0]
-
+        try:
+            league = SubElement(root,'League')
+            t = season[1].split(',')[0]
+            league.text = t
+            # seas = SubElement(root,'Season')
+            # seas.text = season[0]
+        except:
+            pass
         #pred
         Pred1 = root.find('Pred1')
         if Pred1 !=None:
@@ -103,55 +105,62 @@ class FootballRatings():
         # g_d = SubElement(root, 'GoalDifference')
         gd_key = gd[0::2]
         gd_values = gd[1::2]
-
-        for i in range(len(gd_key)):
-            temp = gd_key[i].replace('>+5','6')
-            temp = temp.replace('<-5','-6')
-            temp = temp.replace('+','')
-            temp = 'PredGA'+temp
-            val = SubElement(root, temp)
-            t = gd_values[i].replace('>','')
-            t = t.replace('<','')
-            val.text = t
+        try:
+            for i in range(len(gd_key)):
+                temp = gd_key[i].replace('>+5','6')
+                temp = temp.replace('<-5','-6')
+                temp = temp.replace('+','')
+                temp = 'PredGA'+temp
+                val = SubElement(root, temp)
+                t = gd_values[i].replace('>','')
+                t = t.replace('<','')
+                val.text = t
+        except:
+            pass        
 
         # exact scores
         # e_s = SubElement(root, 'ExactScore')
         es_key = exact_score[0::2]
         es_values = exact_score[1::2]
-        for i in range(len(es_key)):
-            temp = 'PredCSFT'+es_key[i]
-            val = SubElement(root, temp)
-            t = es_values[i].replace('>','')
-            t = t.replace('<','')
-            val.text = t
+        try:
+            for i in range(len(es_key)):
+                temp = 'PredCSFT'+es_key[i]
+                val = SubElement(root, temp)
+                t = es_values[i].replace('>','')
+                t = t.replace('<','')
+                val.text = t
+        except:
+            pass        
         # odds drift
-        Odds1 = SubElement(root,'Odds1')
-        Odds1.text = odds_drift[0]
-        OddsX = SubElement(root,'OddsX')
-        OddsX.text = odds_drift[1]
-        Odds2 = SubElement(root,'Odds2')
-        Odds2.text = odds_drift[2]
+        if odds_drift!=[]:
+            Odds1 = SubElement(root,'Odds1')
+            Odds1.text = odds_drift[0]
+            OddsX = SubElement(root,'OddsX')
+            OddsX.text = odds_drift[1]
+            Odds2 = SubElement(root,'Odds2')
+            Odds2.text = odds_drift[2]
         # extras tilt,elo percentage, HFA, excepted goals
-        hfa = SubElement(root, 'HomefieldleagueadvELO')
-        hfa.text = re.search(r'[\d]+',extra[0]).group()
+        if extra!=[]:
+            hfa = SubElement(root, 'HomefieldleagueadvELO')
+            hfa.text = re.search(r'[\d]+',extra[0]).group()
 
-        elo_per_home = SubElement(root, "PredAHOhome-Homefieldadv")
-        elo_per_home.text = extra[1]
+            elo_per_home = SubElement(root, "PredAHOhome-Homefieldadv")
+            elo_per_home.text = extra[1]
 
-        elo_per_away = SubElement(root, "PredAHOaway-Homefieldadv")
-        elo_per_away.text = extra[2]
+            elo_per_away = SubElement(root, "PredAHOaway-Homefieldadv")
+            elo_per_away.text = extra[2]
 
-        tilt_home = SubElement(root,"HometeamTilt")
-        tilt_home.text = extra[3]
+            tilt_home = SubElement(root,"HometeamTilt")
+            tilt_home.text = extra[3]
 
-        tilt_away = SubElement(root, 'AwayteamTilt')
-        tilt_away.text = extra[4]
+            tilt_away = SubElement(root, 'AwayteamTilt')
+            tilt_away.text = extra[4]
 
-        expected_goals_home = SubElement(root, 'Hometeamexpgoals')
-        expected_goals_home.text = extra[6]
+            expected_goals_home = SubElement(root, 'Hometeamexpgoals')
+            expected_goals_home.text = extra[6]
 
-        expected_goals_away = SubElement(root, 'Awayteamexpgoals')
-        expected_goals_away.text = extra[7]
+            expected_goals_away = SubElement(root, 'Awayteamexpgoals')
+            expected_goals_away.text = extra[7]
         return root
 
     def extract_add(self,value_y,root):
