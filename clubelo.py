@@ -16,6 +16,7 @@ import requests
 from bs4 import BeautifulSoup
 from dateutil.rrule import rrule, DAILY
 import errno
+from yattag import indent
 PATH = ''
 # Rank
 # Teamname
@@ -258,7 +259,7 @@ class FootballRatings():
         # Matches = self.extract_add(value_y,Match)           
         Matches = self.extract_vs(value_y,Match) 
 
-        soup = BeautifulSoup(tostring(root), 'xml')    
+        soup = tostring(root)
         return soup    
 
     def parse_rank(self, response, date):
@@ -274,8 +275,7 @@ class FootballRatings():
         cr = csv.reader(res.splitlines(), delimiter=',')
         result_list = list(cr)
         filename = date+ ' Clubelo ranking list'+'.xml'
-        root = Element('xml')
-        root.set('version', '1.0')
+        root = Element('Rankings')
         Source = SubElement(root, 'Source')
         Source.text = 'Clubelo ELO ranking'
         Sport = SubElement(root, 'Sport')
@@ -292,10 +292,11 @@ class FootballRatings():
                 Country.text = self.country_list[result[2]]
                 ELOpoints = SubElement(Team, 'ELOpoints')
                 ELOpoints.text = result[4]
-        soup = BeautifulSoup(tostring(root), 'xml')      
+        # soup = BeautifulSoup(tostring(root), 'xml')    
+        soup = tostring(root)  
         with open(os.path.join(PATH,filename), 'w', encoding="utf-8") as fl:
             print(filename)
-            fl.write(soup.decode('utf-8'))
+            fl.write(indent(soup.decode('utf-8')))
 
 
 
@@ -406,7 +407,7 @@ class FootballRatings():
             with open(os.path.join(PATH,filename), 'w', encoding='utf-8') as fl:
                 try: 
                     print(filename+'\n')
-                    fl.write(xml.decode('utf-8'))
+                    fl.write(indent(xml.decode('utf-8')))
 
                 except:
                     pass
