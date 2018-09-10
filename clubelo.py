@@ -161,12 +161,20 @@ class FootballRatings():
 
             tilt_away = SubElement(root, 'AwayteamTilt')
             tilt_away.text = extra[4]
+            if extra[3] == 'Tilt':
 
-            expected_goals_home = SubElement(root, 'Hometeamexpgoals')
-            expected_goals_home.text = extra[6]
+                expected_goals_home = SubElement(root, 'Hometeamexpgoals')
+                expected_goals_home.text = extra[4]
 
-            expected_goals_away = SubElement(root, 'Awayteamexpgoals')
-            expected_goals_away.text = extra[7]
+                expected_goals_away = SubElement(root, 'Awayteamexpgoals')
+                expected_goals_away.text = extra[5]
+            else:
+                expected_goals_home = SubElement(root, 'Hometeamexpgoals')
+                expected_goals_home.text = extra[6]
+
+                expected_goals_away = SubElement(root, 'Awayteamexpgoals')
+                expected_goals_away.text = extra[7]
+
         return root
 
     def extract_add(self,value_y,root):
