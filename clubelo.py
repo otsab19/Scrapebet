@@ -82,19 +82,33 @@ class FootballRatings():
             '//svg[@height=240 and @width=540]//text[@fill="#72BBEF"]/text()')
         prob = html_sel.xpath('//svg[@height=22 and @width=640]//text/text()')
         season = html_sel.xpath('//*[@class="astblatt"]/div/p/text()')
-
+        try: 
+            country_for_league = html_sel.xpath('//*[@class="astblatt"]/div/p/img/@alt')[0]
+        except BaseException:
+            pass
         # season
         try:
+            get_country = ''
+            if country_for_league != 'UCL':
+                get_country = self.country_list[country_for_league]
             league = SubElement(root, 'League')
             t = season[1].split(',')[0]
             league.text = t
             if len((season[1].split(','))) == 3:
-                self.league_name = season[1].split(
-                    ',')[0] + '-' + season[1].split(',')[1]
+                self.league_name = season[1].split(',')[1].strip()
+                self.league_name = self.league_name.replace('/','-')
             else:
-                self.league_name = season[1].split(
-                    ',')[0]
+                if 'Final Score' in season[1]:
+                    self.league_name = season[1].split(
+                        ',')[0].strip()
+                else: 
+                    self.league_name = season[1].split(
+                        ',')[1].strip()
+   
+                self.league_name = self.league_name.replace('/','-')
 
+            if country_for_league != 'UCL':
+                self.league_name = get_country + ' - ' + self.league_name
             # seas = SubElement(root,'Season')
             # seas.text = season[0]
         except BaseException:
@@ -315,7 +329,11 @@ class FootballRatings():
                 Teamname = SubElement(Team, 'Teamname')
                 Teamname.text = result[1]
                 Country = SubElement(Team, 'Country')
-                Country.text = self.country_list[result[2]]
+                try:
+                    Country.text = self.country_list[result[2]]
+                except KeyError as e:
+                    print (e, 'Country Code not found')
+                    print ("Add country code", result[2])
                 ELOpoints = SubElement(Team, 'ELOpoints')
                 ELOpoints.text = result[4]
         # soup = BeautifulSoup(tostring(root), 'xml')
