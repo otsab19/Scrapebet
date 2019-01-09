@@ -82,8 +82,9 @@ class FootballRatings():
             '//svg[@height=240 and @width=540]//text[@fill="#72BBEF"]/text()')
         prob = html_sel.xpath('//svg[@height=22 and @width=640]//text/text()')
         season = html_sel.xpath('//*[@class="astblatt"]/div/p/text()')
-        try: 
-            country_for_league = html_sel.xpath('//*[@class="astblatt"]/div/p/img/@alt')[0]
+        try:
+            country_for_league = html_sel.xpath(
+                '//*[@class="astblatt"]/div/p/img/@alt')[0]
         except BaseException:
             pass
         # season
@@ -93,24 +94,42 @@ class FootballRatings():
                 get_country = self.country_list[country_for_league]
             league = SubElement(root, 'League')
             t = season[1].split(',')[0]
-            league.text = t
+            #league.text = t
             if len((season[1].split(','))) == 3:
                 self.league_name = season[1].split(',')[1].strip()
-                self.league_name = self.league_name.replace('/','-')
+                self.league_name = self.league_name.replace('/', '-')
             else:
                 if 'Final Score' in season[1]:
                     self.league_name = season[1].split(
                         ',')[0].strip()
-                else: 
+                elif 'awarded' in season[1].lower():
+                    self.league_name = season[1].split(
+                        ',')[0].strip()
+                    try:
+                        match_score_decision = re.search(
+                            'awarded.*',
+                            season[1].split(',')[1]).group().replace(
+                            'awarded',
+                            '').strip(')').strip()
+                        # match_score_decision = re.search(
+                        #'(\d)*-(\d)*', season[1].split(',')[0].strip()).group()
+                        match_score_dec_element = SubElement(
+                            root, 'MatchScore-decision')
+                        match_score_dec_element.text = match_score_decision
+                    except BaseException:
+                        pass
+
+                else:
                     self.league_name = season[1].split(
                         ',')[1].strip()
-   
-                self.league_name = self.league_name.replace('/','-')
+
+                self.league_name = self.league_name.replace('/', '-')
 
             if country_for_league != 'UCL':
                 self.league_name = get_country + ' - ' + self.league_name
             # seas = SubElement(root,'Season')
             # seas.text = season[0]
+            league.text = self.league_name
         except BaseException:
             pass
         # pred
@@ -449,7 +468,7 @@ class FootballRatings():
             else:
                 pass
         for result in res:
-            
+
             xml = self.jsontoxml(res[result], result, date)
             # xml_str = json2xml(res[result])
             home_club = list(
