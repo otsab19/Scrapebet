@@ -110,12 +110,15 @@ class FootballRatings():
                             'awarded.*',
                             season[1].split(',')[1]).group().replace(
                             'awarded',
-                            '').strip(')').strip()
+                                '').replace('-', ':').strip(')').strip()
                         # match_score_decision = re.search(
                         #'(\d)*-(\d)*', season[1].split(',')[0].strip()).group()
+                        temp_list_match_score = list(map(lambda x:x.tag,list(root))).index('MatchScore')
                         match_score_dec_element = SubElement(
                             root, 'MatchScore-decision')
                         match_score_dec_element.text = match_score_decision
+                        root.insert(temp_list_match_score+1, root[-1])
+                        del root[-1]
                     except BaseException:
                         pass
 
