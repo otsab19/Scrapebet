@@ -106,6 +106,13 @@ class FootballRatings():
                     self.league_name = season[1].split(
                         ',')[0].strip()
                     try:
+                        score_from_vs_page = re.search('Score.*\(', season[1].split(',')[1]).group().replace('Score:','').replace('-',':').replace('(','').strip(')').strip()
+                        root.find('MatchScore').text = score_from_vs_page
+                        
+                    except BaseException:
+                        pass
+
+                    try:
                         match_score_decision = re.search(
                             'awarded.*',
                             season[1].split(',')[1]).group().replace(
