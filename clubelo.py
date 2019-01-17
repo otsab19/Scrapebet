@@ -102,6 +102,10 @@ class FootballRatings():
                 if 'Final Score' in season[1]:
                     self.league_name = season[1].split(
                         ',')[0].strip()
+                elif 'Score' in season[1]:
+                    self.league_name = season[1].split(
+                        ',')[0].strip()
+
                 elif 'awarded' in season[1].lower():
                     self.league_name = season[1].split(
                         ',')[0].strip()
