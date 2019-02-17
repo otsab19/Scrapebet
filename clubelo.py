@@ -71,6 +71,7 @@ class FootballRatings():
         url = 'http://clubelo.com' + url
         res = requests.get(url)
         if res.status_code != 200:
+            self.league_name = root.find('Country').text
             return root
 
         html_sel = html.fromstring(res.content)
@@ -90,7 +91,7 @@ class FootballRatings():
         # season
         try:
             get_country = ''
-            if country_for_league != 'UCL':
+            if country_for_league != 'UCL' and country_for_league != 'UEL':
                 get_country = self.country_list[country_for_league]
             league = SubElement(root, 'League')
             t = season[1].split(',')[0]
@@ -139,7 +140,7 @@ class FootballRatings():
 
                 self.league_name = self.league_name.replace('/', '-')
 
-            if country_for_league != 'UCL':
+            if country_for_league != 'UCL' and country_for_league != 'UEL':
                 self.league_name = get_country + ' - ' + self.league_name
             # seas = SubElement(root,'Season')
             # seas.text = season[0]
@@ -610,6 +611,5 @@ if __name__ == "__main__":
             pass
         else:
             raise
-
     ratings = FootballRatings(scrape_type, date, end_date)
     ratings.start_requests()
