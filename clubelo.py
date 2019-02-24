@@ -141,12 +141,16 @@ class FootballRatings():
                 self.league_name = self.league_name.replace('/', '-')
 
             if country_for_league != 'UCL' and country_for_league != 'UEL':
+                if country_for_league == 'PS1':
+                    get_country = root.find('Country').text
+
                 self.league_name = get_country + ' - ' + self.league_name
             # seas = SubElement(root,'Season')
             # seas.text = season[0]
             league.text = self.league_name
         except BaseException:
-            pass
+            if country_for_league == 'PS1':
+                self.league_name = root.find('Country').text
         # pred
         Pred1 = root.find('Pred1')
         if Pred1 is not None:
