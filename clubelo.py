@@ -71,8 +71,12 @@ class FootballRatings():
         url = 'http://clubelo.com' + url
         res = requests.get(url)
         if res.status_code != 200:
-            self.league_name = root.find('Country').text
-            return root
+            try:
+                self.league_name = root.find('Country').text
+                return root
+            except BaseException:
+                self.league_name = 'Europe'
+                return root
 
         html_sel = html.fromstring(res.content)
         gd = html_sel.xpath('//svg[@height=34]/text/text()')
@@ -93,6 +97,11 @@ class FootballRatings():
             get_country = ''
             if country_for_league != 'UCL' and country_for_league != 'UEL':
                 get_country = self.country_list[country_for_league]
+            else:
+                try:
+                    root.remove(root.find('Country'))
+                except:
+                    pass
             league = SubElement(root, 'League')
             t = season[1].split(',')[0]
             #league.text = t
@@ -503,23 +512,34 @@ class FootballRatings():
             filename = home_club[0]['HomeTeam'] + ' ' + \
                 '-' + ' ' + away_club[0]['AwayTeam'] + '.xml'
             filename = filename.replace('/', ' ')
-            try:
-                PATH = os.path.join(os.getcwd(), scrape_type, self.league_name)
-                os.makedirs(PATH)
-            except OSError as exc:
-                if exc.errno == errno.EEXIST and os.path.isdir(PATH):
-                    pass
-                else:
-                    raise
-            try:
-                PATH = os.path.join(
-                    os.getcwd(), scrape_type, self.league_name, date)
-                os.makedirs(PATH)
-            except OSError as exc:
-                if exc.errno == errno.EEXIST and os.path.isdir(PATH):
-                    pass
-                else:
-                    raise
+            if self.league_name == 'Champions League' or self.league_name == 'Europa League':
+                try:
+                    PATH = os.path.join(os.getcwd(), scrape_type, 'Europe', self.league_name, date)
+                    os.makedirs(PATH)
+                except OSError as exc:
+                    if exc.errno == errno.EEXIST and os.path.isdir(PATH):
+                        pass
+                    else:
+                        raise 
+            else:
+                try:
+                    PATH = os.path.join(os.getcwd(), scrape_type, self.league_name)
+                    os.makedirs(PATH)
+                except OSError as exc:
+                    if exc.errno == errno.EEXIST and os.path.isdir(PATH):
+                        pass
+                    else:
+                        raise
+
+                try:
+                    PATH = os.path.join(
+                        os.getcwd(), scrape_type, self.league_name, date)
+                    os.makedirs(PATH)
+                except OSError as exc:
+                    if exc.errno == errno.EEXIST and os.path.isdir(PATH):
+                        pass
+                    else:
+                        raise
 
             with open(os.path.join(PATH, filename), 'w', encoding='utf-8') as fl:
                 try:
