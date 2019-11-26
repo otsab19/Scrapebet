@@ -96,7 +96,10 @@ class FootballRatings():
         try:
             get_country = ''
             if country_for_league != 'UCL' and country_for_league != 'UEL':
-                get_country = self.country_list[country_for_league]
+                try:
+                    get_country = self.country_list[country_for_league]
+                except KeyError:
+                    get_country = root.find('Country').text
             else:
                 try:
                     root.remove(root.find('Country'))
